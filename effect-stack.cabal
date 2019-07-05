@@ -1,5 +1,5 @@
 name:                effect-stack
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Reducing the pain of transformer stacks with duplicated effects
 description:         When using monad transformer stacks, it is common to want
                      to mix effects from various layers of the stack within a
