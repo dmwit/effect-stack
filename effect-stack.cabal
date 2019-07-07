@@ -1,5 +1,5 @@
 name:                effect-stack
-version:             0.1.0.1
+version:             0.2
 synopsis:            Reducing the pain of transformer stacks with duplicated effects
 description:         When using monad transformer stacks, it is common to want
                      to mix effects from various layers of the stack within a
@@ -42,7 +42,16 @@ description:         When using monad transformer stacks, it is common to want
                      @(StateStack m, MonadState inner (PopState m)) => m ()@
                      .
                      to access the state from underneath the outermost
-                     @StateT@, no matter how deep it is.
+                     @StateT@, no matter how deep it is. A sample action of
+                     that type would be @liftState get >> return ()@.
+                     Equivalently, there is
+                     some mild sugar that lets you write the type
+                     .
+                     @MonadStateDepth 1 m inner => m ()@
+                     .
+                     to mean the same thing as the previous type, and
+                     @depthState \@1 get >> return ()@ to mean the same thing
+                     as the previous action.
 license:             BSD3
 license-file:        LICENSE
 author:              Daniel Wagner
@@ -51,7 +60,7 @@ maintainer:          me@dmwit.com
 category:            Control
 build-type:          Simple
 extra-source-files:  ChangeLog.md
-cabal-version:       >=1.10
+cabal-version:       >=2.0
 
 source-repository head
   type:     git
@@ -63,17 +72,28 @@ library
                        Control.Monad.Stack.Cont,
                        Control.Monad.Stack.Except,
                        Control.Monad.Stack.Fail,
+                       Control.Monad.Stack.Internal,
                        Control.Monad.Stack.Reader,
                        Control.Monad.Stack.Select,
                        Control.Monad.Stack.State,
                        Control.Monad.Stack.Writer
-  -- other-modules:
   other-extensions:
+                       AllowAmbiguousTypes,
+                       ConstraintKinds,
+                       DataKinds,
+                       FlexibleContexts,
                        KindSignatures,
-                       TypeFamilies
+                       PolyKinds,
+                       RankNTypes,
+                       ScopedTypeVariables,
+                       TypeApplications,
+                       TypeFamilies,
+                       TypeOperators,
+                       UndecidableInstances
   build-depends:
-                       base >=4.12 && <4.13,
-                       transformers >=0.5 && <0.6
-  -- hs-source-dirs:
+                       base ^>=4.12,
+                       constraints ^>=0.11,
+                       mtl ^>= 2.2,
+                       transformers ^>=0.5
   default-language:    Haskell2010
   ghc-options:         -fno-warn-tabs

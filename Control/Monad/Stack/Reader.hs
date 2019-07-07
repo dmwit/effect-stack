@@ -1,8 +1,15 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.Reader where
 
+import Control.Monad.Reader
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +30,14 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => ReaderStack m where
 	type PopReader m :: * -> *
 	liftReader :: PopReader m a -> m a
+
+type instance Pop ReaderT m = PopReader m
+type ReaderDepth n m = IteratePop n ReaderT m
+type ReaderConstraints n m = (KnownNat n, StackConstraints n ReaderT ReaderStack m)
+type MonadReaderDepth n m r = (ReaderConstraints n m, MonadReader r (ReaderDepth n m))
+
+depthReader :: forall n m a. ReaderConstraints n m => ReaderDepth n m a -> m a
+depthReader = depth @n @ReaderT @ReaderStack liftReader
 
 instance (ReaderStack m, Monoid w) => ReaderStack (AccumT w m) where
 	type PopReader (AccumT w m) = PopReader m

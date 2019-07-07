@@ -1,8 +1,15 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.Fail where
 
+import Control.Monad.Fail
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +30,14 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => FailStack m where
 	type PopFail m :: * -> *
 	liftFail :: PopFail m a -> m a
+
+type instance Pop MaybeT m = PopFail m
+type FailDepth n m = IteratePop n MaybeT m
+type FailConstraints n m = (KnownNat n, StackConstraints n MaybeT FailStack m)
+type MonadFailDepth n m = (FailConstraints n m, MonadFail (FailDepth n m))
+
+depthFail :: forall n m a. FailConstraints n m => FailDepth n m a -> m a
+depthFail = depth @n @MaybeT @FailStack liftFail
 
 instance (FailStack m, Monoid w) => FailStack (AccumT w m) where
 	type PopFail (AccumT w m) = PopFail m

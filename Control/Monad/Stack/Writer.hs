@@ -1,8 +1,15 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.Writer where
 
+import Control.Monad.Writer
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +30,14 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => WriterStack m where
 	type PopWriter m :: * -> *
 	liftWriter :: PopWriter m a -> m a
+
+type instance Pop WL.WriterT m = PopWriter m
+type WriterDepth n m = IteratePop n WL.WriterT m
+type WriterConstraints n m = (KnownNat n, StackConstraints n WL.WriterT WriterStack m)
+type MonadWriterDepth n m w = (WriterConstraints n m, MonadWriter w (WriterDepth n m))
+
+depthWriter :: forall n m a. WriterConstraints n m => WriterDepth n m a -> m a
+depthWriter = depth @n @WL.WriterT @WriterStack liftWriter
 
 instance (WriterStack m, Monoid w) => WriterStack (AccumT w m) where
 	type PopWriter (AccumT w m) = PopWriter m

@@ -1,8 +1,15 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.Cont where
 
+import Control.Monad.Cont
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +30,14 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => ContStack m where
 	type PopCont m :: * -> *
 	liftCont :: PopCont m a -> m a
+
+type instance Pop ContTag m = PopCont m
+type ContDepth n m = IteratePop n ContTag m
+type ContConstraints n m = (KnownNat n, StackConstraints n ContTag ContStack m)
+type MonadContDepth n m = (ContConstraints n m, MonadCont (ContDepth n m))
+
+depthCont :: forall n m a. ContConstraints n m => ContDepth n m a -> m a
+depthCont = depth @n @ContTag @ContStack liftCont
 
 instance (ContStack m, Monoid w) => ContStack (AccumT w m) where
 	type PopCont (AccumT w m) = PopCont m

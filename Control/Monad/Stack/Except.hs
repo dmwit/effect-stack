@@ -1,8 +1,15 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.Except where
 
+import Control.Monad.Except
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +30,14 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => ErrorStack m where
 	type PopError m :: * -> *
 	liftError :: PopError m a -> m a
+
+type instance Pop ExceptT m = PopError m
+type ErrorDepth n m = IteratePop n ExceptT m
+type ErrorConstraints n m = (KnownNat n, StackConstraints n ExceptT ErrorStack m)
+type MonadErrorDepth n m e = (ErrorConstraints n m, MonadError e (ErrorDepth n m))
+
+depthError :: forall n m a. ErrorConstraints n m => ErrorDepth n m a -> m a
+depthError = depth @n @ExceptT @ErrorStack liftError
 
 instance (ErrorStack m, Monoid w) => ErrorStack (AccumT w m) where
 	type PopError (AccumT w m) = PopError m

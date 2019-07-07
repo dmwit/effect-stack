@@ -1,8 +1,13 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.Accum where
 
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +28,13 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => AccumStack m where
 	type PopAccum m :: * -> *
 	liftAccum :: PopAccum m a -> m a
+
+type instance Pop AccumT m = PopAccum m
+type AccumDepth n m = IteratePop n AccumT m
+type AccumConstraints n m = (KnownNat n, StackConstraints n AccumT AccumStack m)
+
+depthAccum :: forall n m a. AccumConstraints n m => AccumDepth n m a -> m a
+depthAccum = depth @n @AccumT @AccumStack liftAccum
 
 instance (Monad m, Monoid w) => AccumStack (AccumT w m) where
 	type PopAccum (AccumT w m) = m

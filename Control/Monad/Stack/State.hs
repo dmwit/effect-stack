@@ -1,8 +1,15 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.State where
 
+import Control.Monad.State
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +30,14 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => StateStack m where
 	type PopState m :: * -> *
 	liftState :: PopState m a -> m a
+
+type instance Pop SL.StateT m = PopState m
+type StateDepth n m = IteratePop n SL.StateT m
+type StateConstraints n m = (KnownNat n, StackConstraints n SL.StateT StateStack m)
+type MonadStateDepth n m s = (StateConstraints n m, MonadState s (StateDepth n m))
+
+depthState :: forall n m a. StateConstraints n m => StateDepth n m a -> m a
+depthState = depth @n @SL.StateT @StateStack liftState
 
 instance (StateStack m, Monoid w) => StateStack (AccumT w m) where
 	type PopState (AccumT w m) = PopState m

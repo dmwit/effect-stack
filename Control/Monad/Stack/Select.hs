@@ -1,8 +1,13 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Stack.Select where
 
+import Control.Monad.Stack.Internal
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Cont
@@ -23,6 +28,13 @@ import Control.Monad.Trans.Writer.Strict as WS
 class Monad m => SelectStack m where
 	type PopSelect m :: * -> *
 	liftSelect :: PopSelect m a -> m a
+
+type instance Pop SelectT m = PopSelect m
+type SelectDepth n m = IteratePop n SelectT m
+type SelectConstraints n m = (KnownNat n, StackConstraints n SelectT SelectStack m)
+
+depthSelect :: forall n m a. SelectConstraints n m => SelectDepth n m a -> m a
+depthSelect = depth @n @SelectT @SelectStack liftSelect
 
 instance (SelectStack m, Monoid w) => SelectStack (AccumT w m) where
 	type PopSelect (AccumT w m) = PopSelect m
