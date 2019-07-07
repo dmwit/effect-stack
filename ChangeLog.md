@@ -1,5 +1,9 @@
 # Revision history for effect-stack
 
+## 0.2.1 -- 2019-07-07
+
+* Demand a very new transformers because we import a very new module.
+
 ## 0.2 -- 2019-07-07
 
 * Added some type-level hackery to make it more comfortable to use with deep stacks.

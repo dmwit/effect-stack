@@ -1,5 +1,5 @@
 name:                effect-stack
-version:             0.2
+version:             0.2.1
 synopsis:            Reducing the pain of transformer stacks with duplicated effects
 description:         When using monad transformer stacks, it is common to want
                      to mix effects from various layers of the stack within a
@@ -94,6 +94,6 @@ library
                        base ^>=4.12,
                        constraints ^>=0.11,
                        mtl ^>= 2.2,
-                       transformers ^>=0.5
+                       transformers ^>=0.5.6
   default-language:    Haskell2010
   ghc-options:         -fno-warn-tabs
