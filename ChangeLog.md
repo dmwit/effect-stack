@@ -1,5 +1,10 @@
 # Revision history for effect-stack
 
+## 0.2 -- 2019-07-07
+
+* Added some type-level hackery to make it more comfortable to use with deep stacks.
+* Added a needed dependency on mtl.
+
 ## 0.1.0.1 -- 2019-07-04
 
 * Removed an unneeded dependency on mtl.
