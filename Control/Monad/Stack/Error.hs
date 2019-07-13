@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Control.Monad.Stack.Except where
+module Control.Monad.Stack.Error where
 
 import Control.Monad.Except
 import Control.Monad.Stack.Internal

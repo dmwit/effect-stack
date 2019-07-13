@@ -1,5 +1,5 @@
 name:                effect-stack
-version:             0.2.1
+version:             0.3
 synopsis:            Reducing the pain of transformer stacks with duplicated effects
 description:         When using monad transformer stacks, it is common to want
                      to mix effects from various layers of the stack within a
@@ -70,7 +70,7 @@ library
   exposed-modules:
                        Control.Monad.Stack.Accum,
                        Control.Monad.Stack.Cont,
-                       Control.Monad.Stack.Except,
+                       Control.Monad.Stack.Error,
                        Control.Monad.Stack.Fail,
                        Control.Monad.Stack.Internal,
                        Control.Monad.Stack.Reader,
