@@ -1,57 +1,35 @@
 name:                effect-stack
 version:             0.3
 synopsis:            Reducing the pain of transformer stacks with duplicated effects
-description:         When using monad transformer stacks, it is common to want
-                     to mix effects from various layers of the stack within a
-                     single block of code. The @lift@ operation can be used to
-                     convert an action that uses effects at some deep layer of
-                     the stack into one that works in the full stack. It
-                     quickly becomes tedious to include exactly the right
-                     number of calls to @lift@ each time they are needed; and
-                     makes the code more fragile when the transformer stack is
-                     changed (e.g. to include a new effect).
+description:         The @mtl@ provides a nice way to write monadic actions
+                     which take advantage of a particular kind of effect (say,
+                     statefulness or exception handling) without being forced
+                     to say exactly which monad is providing that effect.
+                     However, if a transformer stack includes two transformers
+                     that provide the given effect, @mtl@ does not provide a
+                     clean way to disambiguate which one is wanted; the topmost
+                     one is always chosen.
                      .
-                     The @mtl@ package provides a convenient way to point to a
-                     particular layer of the stack, under the assumption that
-                     there is exactly one "kind" of each interesting effect.
-                     (For example, one can only have one type of state, one
-                     type of environment to read from, and so forth.) However,
-                     if one wishes to have to copies of a single kind of
-                     effect, there is no convenient, generic way to choose
-                     anything other than the one that appears topmost in the
-                     stack. For example, for a stack that contains two
-                     @StateT@s in it, one can write code that accesses the
-                     outermost state using a type like
+                     This package provides tools for disambiguating without
+                     being forced to choose a particular transformer stack. It
+                     provides a separate stack for each kind of effect; you may
+                     then disambiguate by depth within each stack. For example,
+                     in a stack with two @StateT@ transformers, one can write
                      .
-                     @MonadState outer m => m ()@
+                     @foo :: MonadStateDepth 0 m a => m a
+                     foo = depthState \@0 get@
                      .
-                     but there is no polymorphic way to reach the inner
-                     @StateT@'s state. One is back to writing fragile code that
-                     depends on exactly which transformer stack was chosen.
+                     for access to the topmost state effects, or
                      .
-                     This package provides a way to make such choices
-                     generically: it introduces a separate stack for each kind
-                     of effect, and provides an operation for popping one layer
-                     of a given effect's stack. Continuing the @StateT@
-                     example, one could write
+                     @bar :: MonadStateDepth 1 m a => m a
+                     bar = depthState \@1 get@
                      .
-                     @MonadState outer m => m ()@
+                     for access to the state from underneath the topmost
+                     @StateT@, no matter how deep in the stack the two
+                     @StateT@s are.
                      .
-                     as before for the outermost state, or
-                     .
-                     @(StateStack m, MonadState inner (PopState m)) => m ()@
-                     .
-                     to access the state from underneath the outermost
-                     @StateT@, no matter how deep it is. A sample action of
-                     that type would be @liftState get >> return ()@.
-                     Equivalently, there is
-                     some mild sugar that lets you write the type
-                     .
-                     @MonadStateDepth 1 m inner => m ()@
-                     .
-                     to mean the same thing as the previous type, and
-                     @depthState \@1 get >> return ()@ to mean the same thing
-                     as the previous action.
+                     See the readme for more detailed motivation, usage
+                     examples, and documentation.
 license:             BSD3
 license-file:        LICENSE
 author:              Daniel Wagner
@@ -59,7 +37,7 @@ maintainer:          me@dmwit.com
 -- copyright:
 category:            Control
 build-type:          Simple
-extra-source-files:  ChangeLog.md
+extra-source-files:  ChangeLog.md README.md
 cabal-version:       2.0
 
 source-repository head

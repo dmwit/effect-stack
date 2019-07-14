@@ -1,5 +1,10 @@
 # Revision history for effect-stack
 
+## 0.3 -- 2019-07-13
+
+* Rename `Control.Monad.Except` to `Control.Monad.Error` for consistency.
+* Documentation.
+
 ## 0.2.1 -- 2019-07-07
 
 * Demand a very new transformers because we import a very new module.
