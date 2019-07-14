@@ -130,9 +130,9 @@ form, but at least the human-written types can be a bit prettier.
 
 There is one module per kind of effect, named `Control.Monad.Stack.<Effect>`.
 Generally, if there is a class for the effect, we drop the initial `Monad` from
-the class name and use that as the name of the effect (e.g. `MonadState` -&gt;
+the class name and use that as the name of the effect (e.g. `MonadState` &rarr;
 `State`). Otherwise we use the final part of the module name from
-`transformers` as the effect name (e.g. `Control.Monad.Trans.Accum` -&gt;
+`transformers` as the effect name (e.g. `Control.Monad.Trans.Accum` &rarr;
 `Accum`). Each module exports the following things:
 
 * A typeclass for popping one layer of that kind of effect off the stack at a
@@ -151,10 +151,10 @@ the class name and use that as the name of the effect (e.g. `MonadState` -&gt;
   calls `Pop<Effect>` the given number of times on the monad. This should
   probably also be considered a low-level tool.
 * A type alias `<Effect>Constraints`. It takes a type-level number and a monad,
-  and produces a constraint saying that you are permitted to call
-  `Pop<Effect>`/`lift<Effect>` the given number of times on the monad. For
-  transformers with no associated class, this will likely be the most
-  commonly-used type-level export.
+  and produces a constraint saying that you are permitted to call `Pop<Effect>`
+  and `lift<Effect>` the given number of times with the monad. For transformers
+  with no associated class, this will likely be the most commonly-used
+  type-level export.
 * A function `depth<Effect>`. It takes a type-level number and a monadic
   action, and calls `lift<Effect>` the given number of times on the action.
   This will most likely be the most commonly-used computation-level export.
@@ -166,10 +166,10 @@ For effects that are associated with a class, the module will also export:
   monad, those parameters follow in the same order that the `Monad<Effect>`
   class demands them. (But note that the monad always comes before the other
   arguments, unlike in `mtl`!) It produces a constraint saying that you can
-  call `Pop<Effect>`/`lift<Effect>` the given number of times on the monad, and
-  that if you call `Pop<Effect>` the given number of times then the result is
-  an instance of `Monad<Effect> <args>`. This will likely be the most commonly-used
-  type-level export when it is available.
+  call `Pop<Effect>` and `lift<Effect>` the given number of times with the
+  monad, and that if you call `Pop<Effect>` the given number of times then the
+  result is an instance of `Monad<Effect> <args>`. This will likely be the most
+  commonly-used type-level export when it is available.
 
 # How do I...
 
