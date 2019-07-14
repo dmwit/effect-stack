@@ -31,8 +31,8 @@ complicated stack like
 
 to capture all of these effects in one monad.
 
-With just the tools provided by the 'transformers' package, though, this type
-can be somewhat frustrating to use. Getting access to the 'WriterT [Warning]'
+With just the tools provided by the `transformers` package, though, this type
+can be somewhat frustrating to use. Getting access to the `WriterT [Warning]`
 part of the stack, for example, involves lifting the write effect through three
 layers of the stack using something like:
 
@@ -40,9 +40,9 @@ layers of the stack using something like:
     warn w = lift (lift (lift (tell [w])))
 
 Besides being tedious, this also calcifies the monad stack; if later we
-discover we got the stack in the wrong order, or decided we needed to add
-another effect, we would need to revisit all the places where we did such
-lifting and reconsider exactly how many occurrences of `lift` there should be.
+discover we got the stack in the wrong order, or decide we need to add another
+effect, we would need to revisit all the places where we did such lifting and
+reconsider exactly how many occurrences of `lift` there should be.
 
 The `mtl` package addresses this problem by adding one typeclass for each kind
 of effect. (Transformers which don't provide that effect pass it through.) This
@@ -65,10 +65,10 @@ we retain the property of having just one `WriterT` in the stack. The three
 uses of `lift` are inferred, and will be adjusted up or down as needed as the
 top-level application monad changes.
 
-However, if one wishes to have two copies of a single kind of effect, there is
-no convenient, generic way to choose anything other than the one that appears
-topmost in the stack. With our `Compiler` monad above, for example, we might
-write
+However, if one wishes to have two or more copies of a single kind of effect,
+there is no convenient, generic way to choose anything other than the one that
+appears topmost in the stack. With our `Compiler` monad above, for example, we
+might write
 
     unify :: MonadState UnificationState m => Type -> Type -> m ()
     unify t1 t2 = get >>= \us -> ...
@@ -87,10 +87,13 @@ style is as yet not very popular:
     freshName :: (MonadTrans t1, MonadTrans t2, MonadState FreshNameGenerator m) => t1 (t2 m) Name
     freshName = lift (lift (modify (...)))
 
-This package provides a way to choose lower layers of the monad stack
-generically: it introduces a separate stack for each kind of effect, and
-provides an operation for popping one layer of a given effect's stack. For
-example, we can still write
+The fragility of `lift` remains, though.
+
+The `effect-stack` package addresses this problem, providing a way to choose
+lower layers of the monad stack generically and without explicitly writing the
+correct number of `lift`s. It introduces a separate stack for each kind of
+effect, and provides an operation for popping one layer of a given effect's
+stack. For example, we can still write
 
     unify :: MonadState UnificationState m => Type -> Type -> m ()
 
@@ -98,10 +101,13 @@ for actions that access the topmost state, but with this library we can also wri
 
     freshName :: (StateStack m, MonadState FreshNameGenerator (PopState m)) => m Name
 
-to access the state from underneath the outermost @StateT@, no matter how deep
+to access the state from underneath the outermost `StateT`, no matter how deep
 it is. We can implement this type using `liftState`; for example:
 
     freshName = liftState (modify (...))
+
+The typeclass resolution mechanism will turn `liftState` into the correct
+number of `lift`s to get from one `StateT` to the next.
 
 Our `Compiler` monad has only two kinds of state, but one could imagine needing
 a third. Writing down the type for accessing the third type shows that using the
@@ -111,8 +117,8 @@ deep stacks:
     thirdStateGet :: (StateStack m, StateStack (PopState m), MonadState X (PopState (PopState m))) => m X
     thirdStateGet = liftState (liftState get)
 
-Consequently, the library also provides some type families to ease this
-iteration; we could also write `thirdStateGet` this way:
+Consequently, the library also provides some type families and operations that
+ease this iteration. Using them, we can also write `thirdStateGet` this way:
 
     thirdStateGet :: MonadStateDepth 2 m X => m X
     thirdStateGet = depthState @2 get
@@ -124,20 +130,20 @@ form, but at least the human-written types can be a bit prettier.
 
 There is one module per kind of effect, named `Control.Monad.Stack.<Effect>`.
 Generally, if there is a class for the effect, we drop the initial `Monad` from
-the class name and use that as the name of the effect (e.g. `MonadState` -&amp;
+the class name and use that as the name of the effect (e.g. `MonadState` -&gt;
 `State`). Otherwise we use the final part of the module name from
-`transformers` as the effect name (e.g. `Control.Monad.Trans.Accum` -&amp;
+`transformers` as the effect name (e.g. `Control.Monad.Trans.Accum` -&gt;
 `Accum`). Each module exports the following things:
 
 * A typeclass for popping one layer of that kind of effect off the stack at a
   time. This should generally be viewed as a low-level tool, but it may also be
   independently useful.
     * The class is named `<Effect>Stack`.
-    * There is a type family `Pop<Effect>`; it takes a monad, and removes
-      enough transformers to drop the outermost transformer of the current kind
-      of effect. (For example, `PopState Compiler` would throw away the
-      outermost `ReaderT` and `StateT`, leaving a new stack that began at the
-      `ExceptT`.)
+    * There is an associated type family `Pop<Effect>`; it takes a monad, and
+      removes enough transformers to drop the outermost transformer of the
+      current kind of effect. For example, `PopState Compiler` would throw away
+      the outermost `ReaderT` and `StateT`, leaving a new stack that began at
+      the `ExceptT`.
     * There is a method `lift<Effect>`; it applies `lift` the appropriate
       number of times to take an action one layer down in the effect stack and
       lift it to the full monad.
@@ -252,7 +258,8 @@ transformer that can provide them:
 
 Each kind of effect's stack is 0-indexed, so the outermost layer is layer 0. If
 we want to access effects not provided by the top-most transformer, then we
-must use `effect-stack` types.
+must use `effect-stack` types (like `MonadStateDepth`) and methods (like
+`depthState`).
 
     freshName :: MonadStateDepth 1 m FreshNameGenerator => m Name
     freshName = depthState @1 $ do
@@ -279,12 +286,16 @@ specialized to the `Compiler` type as we wanted:
     main :: IO ()
     main = runCompiler $ do
     	unify () ()
+    	warn "PHP is still more popular than Haskell."
     	v <- freshName
     	local (v:) $ do
     		unify' () ()
     		debug
 
-Running it produces the output `(1,["1"])`, then exits successfully.
+Running it exits successfully after printing
+
+    (1,["1"])
+    PHP is still more popular than Haskell.
 
 ## ...use a new transformer with existing kinds of effects?
 
@@ -297,7 +308,7 @@ some kind of stateful effect?
 If it does, write an instance in which the `Pop<Effect>` family immediately
 returns the monad being transformed, and `lift<Effect>` is just `lift`. For
 example, because the `AccumT` family of transformers provides the
-`Accum`ulation effect, we would write an instance like this:
+`Accum`ulation effect, the library provides this instance:
 
     instance (Monad m, Monoid w) => AccumStack (AccumT w m) where
     	type PopAccum (AccumT w m) = m
@@ -385,7 +396,7 @@ This approach has two main drawbacks:
    burden on users. (Indeed, this is the standard justification for the
    functional dependency included in all `mtl` typeclasses.)
 2. It still leaves you open to the problem of mixing effects which just happen,
-   by coincidence, to need access to the same type of state. For example,
+   by coincidence, to need access to the same type in the effect. For example,
    suppose your compiler is tracking how many tab characters it has seen so
    that it can issue an appropriate warning. Even so, some local module might
    want to slap a transformer on top to add an effect for tracking the arity of
@@ -417,14 +428,19 @@ imagine writing something like:
     freshName :: MonadState Fresh FreshNameGenerator m => m Name
     freshName = modify @Fresh (...)
 
+Convenient shorthands could be provided by the appropriate libraries for
+selecting, say, the `()` tag by default when the stack of interest was
+unambiguous about which layer should provide a given effect.
+
 Unlike choosing by effect or choosing by effect+type, one need not worry about
 collisions with tags; modules which want to transform an existing monad could
 ensure they use fresh tags by just making a new data kind.
 
 This approach has a lot going for it, and I'd love to see a competing library
 attempt this. The main drawback is that it is all-or-nothing, in that the
-existing `transformers` transformers do not have these tags. This package
-interoperates smoothly with existing `transformers` stacks. This means that
+existing `transformers` transformers do not have these tags. By contrast,
+`effect-stack` interoperates smoothly with existing `transformers` stacks. This
+means that
 
 1. Existing projects can adopt this library without a big migration.
 2. New projects can use just `transformers`+`mtl`, which are syntactically and
