@@ -25,8 +25,10 @@ import Control.Monad.Trans.Writer.CPS as WC
 import Control.Monad.Trans.Writer.Lazy as WL
 import Control.Monad.Trans.Writer.Strict as WS
 
+import Data.Kind
+
 class Monad m => AccumStack m where
-	type PopAccum m :: * -> *
+	type PopAccum m :: Type -> Type
 	liftAccum :: PopAccum m a -> m a
 
 type instance Pop AccumT m = PopAccum m

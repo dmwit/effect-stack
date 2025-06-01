@@ -27,8 +27,10 @@ import Control.Monad.Trans.Writer.CPS as WC
 import Control.Monad.Trans.Writer.Lazy as WL
 import Control.Monad.Trans.Writer.Strict as WS
 
+import Data.Kind
+
 class Monad m => ErrorStack m where
-	type PopError m :: * -> *
+	type PopError m :: Type -> Type
 	liftError :: PopError m a -> m a
 
 type instance Pop ExceptT m = PopError m

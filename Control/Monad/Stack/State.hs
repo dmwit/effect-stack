@@ -27,8 +27,10 @@ import Control.Monad.Trans.Writer.CPS as WC
 import Control.Monad.Trans.Writer.Lazy as WL
 import Control.Monad.Trans.Writer.Strict as WS
 
+import Data.Kind
+
 class Monad m => StateStack m where
-	type PopState m :: * -> *
+	type PopState m :: Type -> Type
 	liftState :: PopState m a -> m a
 
 type instance Pop SL.StateT m = PopState m

@@ -27,8 +27,10 @@ import Control.Monad.Trans.Writer.CPS as WC
 import Control.Monad.Trans.Writer.Lazy as WL
 import Control.Monad.Trans.Writer.Strict as WS
 
+import Data.Kind
+
 class Monad m => WriterStack m where
-	type PopWriter m :: * -> *
+	type PopWriter m :: Type -> Type
 	liftWriter :: PopWriter m a -> m a
 
 type instance Pop WL.WriterT m = PopWriter m
