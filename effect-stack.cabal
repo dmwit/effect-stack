@@ -1,5 +1,5 @@
 name:                effect-stack
-version:             0.3
+version:             0.3.0.1
 synopsis:            Reducing the pain of transformer stacks with duplicated effects
 description:         The @mtl@ provides a nice way to write monadic actions
                      which take advantage of a particular kind of effect (say,

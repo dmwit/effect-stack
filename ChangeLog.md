@@ -1,5 +1,9 @@
 # Revision history for effect-stack
 
+## 0.3.0.1 -- 2025-06-05
+
+* Relax dependency versions; thank you Aster89.
+
 ## 0.3 -- 2019-07-13
 
 * Rename `Control.Monad.Except` to `Control.Monad.Error` for consistency.
