@@ -27,8 +27,10 @@ import Control.Monad.Trans.Writer.CPS as WC
 import Control.Monad.Trans.Writer.Lazy as WL
 import Control.Monad.Trans.Writer.Strict as WS
 
+import Data.Kind
+
 class Monad m => FailStack m where
-	type PopFail m :: * -> *
+	type PopFail m :: Type -> Type
 	liftFail :: PopFail m a -> m a
 
 type instance Pop MaybeT m = PopFail m

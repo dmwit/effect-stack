@@ -27,8 +27,10 @@ import Control.Monad.Trans.Writer.CPS as WC
 import Control.Monad.Trans.Writer.Lazy as WL
 import Control.Monad.Trans.Writer.Strict as WS
 
+import Data.Kind
+
 class Monad m => ContStack m where
-	type PopCont m :: * -> *
+	type PopCont m :: Type -> Type
 	liftCont :: PopCont m a -> m a
 
 type instance Pop ContTag m = PopCont m

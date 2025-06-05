@@ -25,8 +25,10 @@ import Control.Monad.Trans.Writer.CPS as WC
 import Control.Monad.Trans.Writer.Lazy as WL
 import Control.Monad.Trans.Writer.Strict as WS
 
+import Data.Kind
+
 class Monad m => SelectStack m where
-	type PopSelect m :: * -> *
+	type PopSelect m :: Type -> Type
 	liftSelect :: PopSelect m a -> m a
 
 type instance Pop SelectT m = PopSelect m
